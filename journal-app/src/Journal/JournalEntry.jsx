@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc } from "firebase/firestore";
+import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc, deleteDoc, setDoc } from "firebase/firestore";
 import db from '../db';
+
 
 
 export default function JournalEntry() {
@@ -9,6 +10,7 @@ export default function JournalEntry() {
     const [isLoading, setIsLoading] = useState(true)
     const [hasError, setHasError] = useState(false)
     const { id } = useParams();
+    const navigate = useNavigate()
 
     useEffect(() => {
         const getData = async () => {
@@ -35,6 +37,22 @@ export default function JournalEntry() {
 
     }, [id])
 
+    const handleDelete = async() => {
+        console.log('Deleted')
+        await deleteDoc(doc(db, "journal-entries", id));
+        navigate('/journal')
+    }
+
+    const handleEdit = async () => {
+        const newVal = window.prompt('Enter new journal entry')
+        console.log("newVal: ", newVal)
+        await setDoc(doc(db, "journal-entries", id), {
+            entry: newVal,
+            createdAt: new Date()
+        });
+        //await deleteDoc(doc(db, "journal-entries", id));
+    }
+
     if (isLoading) {
         return <h1>Loading...</h1>
     }
@@ -48,6 +66,9 @@ export default function JournalEntry() {
         <div>
             <h1>Journal Entry: {id}</h1>
             <p>{entry.entry}</p>
+            <br />
+            <button onClick={() => handleDelete()}>Delete</button>
+            <button onClick={() => handleEdit()}>Edit</button>
         </div>
     );
 }
